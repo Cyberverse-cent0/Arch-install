@@ -2,6 +2,7 @@ import os
 import sys
 from . import log
 
+
 # --- ANSI colors -------------------------------------------------------------
 COLORS = {
     "reset":  "\033[0m",
@@ -46,4 +47,4 @@ def pr_debug(message: str, func_name: str) -> None:
 
 def pr_dry(message: str, func_name: str) -> None:
     log.log(message, func_name, "info")
-    print(message)
+    _print("[DRY]", message, COLORS["cyan"])

@@ -62,6 +62,11 @@ def validate_config(config: Any) -> dict[str, Any]:
         "settings.dry_run",
     )
 
+    _validate_bool(
+        settings.get("stop_on_error", True),
+        "settings.stop_on_error",
+    )
+
     # Validate operation list.
     operations = config.get("operations", [])
 

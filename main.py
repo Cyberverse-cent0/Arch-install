@@ -60,7 +60,15 @@ FUNCTIONS: dict[str, Callable[..., Any]] = {
 }
 
 
-# Operations that may modify the system.
+# Read-only functions that don't modify the system.
+READ_ONLY_FUNCTIONS = {
+    "get_all_disks",
+    "get_disk_info",
+    "get_disk_size",
+    "collect_profile",
+}
+
+# Destructive functions that modify the system.
 DESTRUCTIVE_FUNCTIONS = {
     "btrfs_disk_setup",
     "crypt_setup",
@@ -130,13 +138,18 @@ def execute_operation(
     Execute one operation.
 
     In dry-run mode:
-    - Pass dry_run=True to functions that support it.
-    - Skip destructive functions without dry-run support.
-    - Allow non-destructive functions to execute.
+    - Read-only functions execute normally (safe to run)
+    - Destructive functions with dry_run support get dry_run=True
+    - Destructive functions without dry_run support are skipped
     """
 
     if dry_run:
-        if function_name in DESTRUCTIVE_FUNCTIONS:
+        if function_name in READ_ONLY_FUNCTIONS:
+            pr_info(
+                f"Executing read-only function: '{function_name}'",
+                "execute_operation",
+            )
+        elif function_name in DESTRUCTIVE_FUNCTIONS:
             if not supports_dry_run(function):
                 pr_info(
                     f"Dry run: skipped '{function_name}'. "
@@ -154,12 +167,24 @@ def execute_operation(
                 f"Dry run: simulating '{function_name}'",
                 "execute_operation",
             )
-
-        elif supports_dry_run(function):
-            parameters = {
-                **parameters,
-                "dry_run": True,
-            }
+        else:
+            # Unknown function category, treat as destructive
+            if supports_dry_run(function):
+                parameters = {
+                    **parameters,
+                    "dry_run": True,
+                }
+                pr_info(
+                    f"Dry run: simulating '{function_name}'",
+                    "execute_operation",
+                )
+            else:
+                pr_info(
+                    f"Dry run: skipped '{function_name}'. "
+                    "Function does not explicitly support dry_run.",
+                    "execute_operation",
+                )
+                return None
 
     return function(**parameters)
 
@@ -171,14 +196,8 @@ def run_config(
     """Run the operations defined in the configuration."""
 
     settings = config.get("settings", {})
-
-    if not isinstance(settings, dict):
-        raise ConfigError("'settings' must be an object")
-
     config_dry_run = settings.get("dry_run", True)
-
-    if not isinstance(config_dry_run, bool):
-        raise ConfigError("'settings.dry_run' must be true or false")
+    stop_on_error = settings.get("stop_on_error", True)
 
     # CLI option takes precedence over the configuration.
     dry_run = (
@@ -188,21 +207,17 @@ def run_config(
     )
 
     application = config.get("application", {})
-
-    if not isinstance(application, dict):
-        raise ConfigError("'application' must be an object")
-
     require_root = application.get("require_root", True)
 
-    if not isinstance(require_root, bool):
-        raise ConfigError(
-            "'application.require_root' must be true or false"
-        )
+    operations = config.get("operations", [])
 
     if dry_run:
         pr_info("Dry-run mode enabled.", "run_config")
     else:
         pr_info("Execution mode enabled.", "run_config")
+
+    pr_info(f"Stop on error: {stop_on_error}", "run_config")
+    pr_info(f"Total operations to execute: {len(operations)}", "run_config")
 
     if require_root and not dry_run and not is_root():
         pr_error(
@@ -211,27 +226,11 @@ def run_config(
         )
         return False
 
-    operations = config.get("operations", [])
-
-    if not isinstance(operations, list):
-        raise ConfigError("'operations' must be a list")
-
     for index, operation in enumerate(operations):
-        if not isinstance(operation, dict):
-            pr_error(
-                f"Operation {index} must be an object.",
-                "run_config",
-            )
-            return False
-
         function_name = operation.get("function")
+        parameters = operation.get("parameters", {})
 
-        if not isinstance(function_name, str):
-            pr_error(
-                f"Operation {index} has no valid function name.",
-                "run_config",
-            )
-            return False
+        pr_info(f"Executing operation {index + 1}/{len(operations)}: {function_name}", "run_config")
 
         function = FUNCTIONS.get(function_name)
 
@@ -239,15 +238,6 @@ def run_config(
             pr_error(
                 f"Unsupported function in operation {index}: "
                 f"{function_name}",
-                "run_config",
-            )
-            return False
-
-        parameters = operation.get("parameters", {})
-
-        if not isinstance(parameters, dict):
-            pr_error(
-                f"Parameters for '{function_name}' must be an object.",
                 "run_config",
             )
             return False
@@ -265,14 +255,18 @@ def run_config(
                 f"Invalid parameters for '{function_name}': {error}",
                 "run_config",
             )
-            return False
+            if stop_on_error:
+                return False
+            continue
 
         except Exception as error:
             pr_error(
                 f"Operation '{function_name}' failed: {error}",
                 "run_config",
             )
-            return False
+            if stop_on_error:
+                return False
+            continue
 
         if is_dataclass(result):
             result = asdict(result)
@@ -288,7 +282,9 @@ def run_config(
                 f"Operation '{function_name}' returned False.",
                 "run_config",
             )
-            return False
+            if stop_on_error:
+                return False
+            continue
 
     pr_info(
         "Configuration processing completed.",
@@ -340,6 +336,7 @@ def main() -> int:
 
     try:
         config = load_config(args.config)
+        pr_info(f"Configuration loaded from {args.config}", "main")
 
         return (
             0
@@ -348,15 +345,16 @@ def main() -> int:
         )
 
     except ConfigError as error:
-        pr_error(str(error), "main")
+        pr_error(f"Configuration error: {error}", "main")
         return 2
 
     except OSError as error:
-        pr_error(
-            f"Unable to access configuration: {error}",
-            "main",
-        )
+        pr_error(f"Unable to access configuration: {error}", "main")
         return 2
+
+    except Exception as error:
+        pr_error(f"Unexpected error: {error}", "main")
+        return 3
 
 
 if __name__ == "__main__":
