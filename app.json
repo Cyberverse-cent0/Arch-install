@@ -1,0 +1,96 @@
+{
+  "application": {
+    "name": "codecrafters-arch-installer",
+    "version": "1.0.2",
+    "require_root": true
+  },
+  "settings": {
+    "dry_run": true,
+    "stop_on_error": true
+  },
+  "operations": [
+    {
+      "function": "get_all_disks",
+      "parameters": {}
+    },
+    {
+      "function": "collect_profile",
+      "parameters": {}
+    },
+    {
+      "function": "dev_tools",
+      "parameters": {
+        "confirm": false
+      }
+    },
+    {
+      "function": "install_desktop",
+      "parameters": {
+        "desktop": "gnome",
+        "confirm": false
+      }
+    },
+    {
+      "function": "install_packages",
+      "parameters": {
+        "packages": ["base", "linux", "linux-firmware", "grub", "efibootmgr"],
+        "confirm": false
+      }
+    },
+    {
+      "function": "crypt_setup",
+      "parameters": {
+        "disk": "/dev/sda",
+        "password": "CHANGE_ME",
+        "name": "cryptroot",
+        "crypt_type": "luks2",
+        "confirm": false,
+        "timeout": 300
+      }
+    },
+    {
+      "function": "pv_create",
+      "parameters": {
+        "device": "/dev/mapper/cryptroot",
+        "confirm": false
+      }
+    },
+    {
+      "function": "vg_create",
+      "parameters": {
+        "vg_name": "archvg",
+        "device": "/dev/mapper/cryptroot",
+        "confirm": false
+      }
+    },
+    {
+      "function": "lv_create",
+      "parameters": {
+        "vg_name": "archvg",
+        "lv_name": "root",
+        "size": "100%FREE",
+        "confirm": false
+      }
+    },
+    {
+      "function": "btrfs_disk_setup",
+      "parameters": {
+        "disk": "/dev/mapper/archvg-root",
+        "label": "ARCH",
+        "confirm": false,
+        "timeout": 300
+      }
+    },
+    {
+      "function": "install_grub",
+      "parameters": {
+        "root_mount": "/mnt",
+        "boot_mode": "uefi",
+        "efi_directory": "/mnt/boot",
+        "bootloader_id": "GRUB",
+        "confirm": false,
+        "timeout": 300
+      }
+    }
+  ]
+}
