@@ -29,7 +29,13 @@ from src.pkgs.aur_setup import (
     install_aur_packages,
     setup_aur_helper,
 )
-from src.boot.grub_setup import install_grub
+from src.boot.grub_setup import configure_grub_kernel_params, install_grub
+from src.boot.mkinitcpio import (
+    configure_mkinitcpio_hooks,
+    get_default_hooks_encrypted_lvm,
+    regenerate_initramfs,
+    write_crypttab,
+)
 from src.profile.system_profile import collect_profile, save_profile
 from src.user.user_setup import (
     add_user_to_group,
@@ -71,6 +77,10 @@ FUNCTIONS: dict[str, Callable[..., Any]] = {
     "add_user_to_group": add_user_to_group,
     "setup_default_groups": setup_default_groups,
     "setup_sudo_access": setup_sudo_access,
+    "regenerate_initramfs": regenerate_initramfs,
+    "configure_mkinitcpio_hooks": configure_mkinitcpio_hooks,
+    "write_crypttab": write_crypttab,
+    "configure_grub_kernel_params": configure_grub_kernel_params,
 }
 
 
@@ -105,6 +115,10 @@ DESTRUCTIVE_FUNCTIONS = {
     "add_user_to_group",
     "setup_default_groups",
     "setup_sudo_access",
+    "regenerate_initramfs",
+    "configure_mkinitcpio_hooks",
+    "write_crypttab",
+    "configure_grub_kernel_params",
 }
 
 

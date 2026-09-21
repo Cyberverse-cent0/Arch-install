@@ -1,4 +1,3 @@
-
 import json
 from pathlib import Path
 from typing import Any
@@ -21,6 +20,21 @@ def _validate_bool(
     if not isinstance(value, bool):
         raise ConfigError(
             f"'{field_name}' must be true or false"
+        )
+
+
+def _validate_string_list(
+    value: Any,
+    field_name: str,
+) -> None:
+    """Validate a list of strings."""
+    if not isinstance(value, list):
+        raise ConfigError(
+            f"'{field_name}' must be a list"
+        )
+    if not all(isinstance(item, str) for item in value):
+        raise ConfigError(
+            f"'{field_name}' must contain only strings"
         )
 
 
@@ -101,6 +115,30 @@ def validate_config(config: Any) -> dict[str, Any]:
                 f"{operation_name}.parameters "
                 "must be a JSON object"
             )
+        
+        # Validate hook configurations for mkinitcpio operations
+        if function_name == "configure_mkinitcpio_hooks":
+            hooks = parameters.get("hooks")
+            _validate_string_list(hooks, f"{operation_name}.parameters.hooks")
+        
+        # Validate crypttab entries
+        if function_name == "write_crypttab":
+            entries = parameters.get("entries")
+            if not isinstance(entries, list):
+                raise ConfigError(
+                    f"{operation_name}.parameters.entries must be a list"
+                )
+            for entry in entries:
+                if not isinstance(entry, dict):
+                    raise ConfigError(
+                        f"{operation_name}.parameters.entries must contain objects"
+                    )
+                required_fields = ["target", "source", "key_file", "options"]
+                for field in required_fields:
+                    if field not in entry:
+                        raise ConfigError(
+                            f"{operation_name}.parameters.entries missing required field: {field}"
+                        )
 
     return config
 

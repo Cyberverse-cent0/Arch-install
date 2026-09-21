@@ -88,8 +88,41 @@
         "boot_mode": "{{BOOT_MODE}}",
         "efi_directory": "{{EFI_DIRECTORY}}",
         "bootloader_id": "GRUB",
+        "crypt_device": "{{TARGET_DISK}}",
+        "crypt_mapper": "cryptroot",
+        "configure_encrypted_boot": true,
         "confirm": false,
         "timeout": 300
+      }
+    },
+    {
+      "function": "write_crypttab",
+      "parameters": {
+        "target_root": "/mnt",
+        "entries": [
+          {
+            "target": "cryptroot",
+            "source": "{{TARGET_DISK}}",
+            "key_file": "none",
+            "options": "luks"
+          }
+        ],
+        "confirm": false
+      }
+    },
+    {
+      "function": "configure_mkinitcpio_hooks",
+      "parameters": {
+        "target_root": "/mnt",
+        "hooks": ["base", "udev", "autodetect", "keyboard", "keymap", "consolefont", "block", "encrypt", "lvm2", "filesystems", "fsck"],
+        "confirm": false
+      }
+    },
+    {
+      "function": "regenerate_initramfs",
+      "parameters": {
+        "target_root": "/mnt",
+        "confirm": false
       }
     },
     {

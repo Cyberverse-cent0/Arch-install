@@ -8,6 +8,7 @@ from typing import Any
 from config import ConfigError, load_config
 from src.disk.btrfs_disk_setup import get_all_disks, DiskInfo
 from src.profile.system_profile import collect_profile
+from src.boot.encryption_layout import EncryptionLayout, get_hooks_for_layout
 
 
 def detect_boot_mode() -> str:
@@ -102,6 +103,17 @@ def get_boot_config(boot_mode: str, target_disk: str) -> dict[str, str]:
     return config
 
 
+def get_encryption_layout() -> EncryptionLayout:
+    """Detect encryption layout based on current configuration."""
+    # For now, default to LUKS + LVM as it's the most common secure setup
+    return EncryptionLayout.LUKS_LVM
+
+
+def get_mkinitcpio_hooks(layout: EncryptionLayout) -> list[str]:
+    """Get appropriate mkinitcpio hooks for the encryption layout."""
+    return get_hooks_for_layout(layout)
+
+
 def generate_config_from_template(
     template_path: str = "app.json.template",
     output: str = "app.generated.json",
@@ -118,6 +130,10 @@ def generate_config_from_template(
     desktop_env = detect_desktop_environment()
     base_packages = get_base_packages(memory_gb, boot_mode)
     boot_config = get_boot_config(boot_mode, target_disk)
+    
+    # Get encryption layout and hooks
+    encryption_layout = get_encryption_layout()
+    mkinitcpio_hooks = get_mkinitcpio_hooks(encryption_layout)
     
     # Load template
     template_path = Path(template_path).expanduser()
