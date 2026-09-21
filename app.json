@@ -85,7 +85,7 @@
       "function": "install_grub",
       "parameters": {
         "root_mount": "/mnt",
-        "boot_mode": null,
+        "boot_mode": "uefi",
         "efi_directory": "/mnt/boot",
         "bootloader_id": "GRUB",
         "crypt_device": "/dev/nvme0n1",
@@ -142,7 +142,7 @@
       }
     },
     {
-      "function": "setup_sudo_access",
+      "function": "set_user_password",
       "parameters": {
         "username": "archuser",
         "confirm": false
