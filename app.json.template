@@ -26,22 +26,22 @@
     {
       "function": "install_desktop",
       "parameters": {
-        "desktop": "gnome",
+        "desktop": "{{DESKTOP_ENV}}",
         "confirm": false
       }
     },
     {
       "function": "install_packages",
       "parameters": {
-        "packages": ["base", "linux", "linux-firmware", "grub", "efibootmgr"],
+        "packages": {{BASE_PACKAGES}},
         "confirm": false
       }
     },
     {
       "function": "crypt_setup",
       "parameters": {
-        "disk": "/dev/sda",
-        "password": "CHANGE_ME",
+        "disk": "{{TARGET_DISK}}",
+        "password": "{{LUKS_PASSWORD}}",
         "name": "cryptroot",
         "crypt_type": "luks2",
         "confirm": false,
@@ -85,8 +85,8 @@
       "function": "install_grub",
       "parameters": {
         "root_mount": "/mnt",
-        "boot_mode": null,
-        "efi_directory": "/mnt/boot",
+        "boot_mode": "{{BOOT_MODE}}",
+        "efi_directory": "{{EFI_DIRECTORY}}",
         "bootloader_id": "GRUB",
         "confirm": false,
         "timeout": 300

@@ -2,11 +2,43 @@ import os
 import shutil
 import stat
 import subprocess
+from pathlib import Path
 
 from lib.print_fn import pr_error, pr_info
 
 
 SUPPORTED_MODES = {"bios", "uefi"}
+
+
+def detect_boot_mode() -> str:
+    """Detect system boot mode (UEFI or BIOS)."""
+    if Path("/sys/firmware/efi").is_dir():
+        return "uefi"
+    return "bios"
+
+
+def find_efi_partition() -> str | None:
+    """Find existing EFI system partition."""
+    try:
+        result = subprocess.run(
+            ["lsblk", "-J", "-o", "NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        import json
+        devices = json.loads(result.stdout).get("blockdevices", [])
+        
+        for device in devices:
+            if device.get("type") == "part":
+                fstype = device.get("fstype", "")
+                if fstype in ["vfat", "fat32", "fat16"]:
+                    mountpoint = device.get("mountpoints", [None])[0]
+                    if mountpoint and "efi" in mountpoint.lower():
+                        return device.get("name")
+        return None
+    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError):
+        return None
 
 
 def _run(command: list[str], function_name: str, timeout: int, dry_run: bool = False) -> bool:
@@ -42,7 +74,7 @@ def _validate_device(device: str) -> bool:
 def install_grub(
     root_mount: str,
     *,
-    boot_mode: str = "uefi",
+    boot_mode: str | None = None,
     boot_device: str | None = None,
     efi_directory: str | None = None,
     bootloader_id: str = "GRUB",
@@ -57,6 +89,11 @@ def install_grub(
     function does not mount partitions or run a shell/chroot command.
     """
     function_name = "install_grub"
+    
+    # Auto-detect boot mode if not specified
+    if boot_mode is None:
+        boot_mode = detect_boot_mode()
+    
     mode = boot_mode.lower().strip()
     if mode not in SUPPORTED_MODES:
         pr_error("boot_mode must be 'uefi' or 'bios'", function_name)

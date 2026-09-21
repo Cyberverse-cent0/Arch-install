@@ -33,14 +33,20 @@
     {
       "function": "install_packages",
       "parameters": {
-        "packages": ["base", "linux", "linux-firmware", "grub", "efibootmgr"],
+        "packages": [
+          "base",
+          "linux",
+          "linux-firmware",
+          "grub",
+          "efibootmgr"
+        ],
         "confirm": false
       }
     },
     {
       "function": "crypt_setup",
       "parameters": {
-        "disk": "/dev/sda",
+        "disk": "/dev/nvme0n1",
         "password": "CHANGE_ME",
         "name": "cryptroot",
         "crypt_type": "luks2",
@@ -85,7 +91,7 @@
       "function": "install_grub",
       "parameters": {
         "root_mount": "/mnt",
-        "boot_mode": null,
+        "boot_mode": "uefi",
         "efi_directory": "/mnt/boot",
         "bootloader_id": "GRUB",
         "confirm": false,
