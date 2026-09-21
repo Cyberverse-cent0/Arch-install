@@ -145,6 +145,7 @@
       "function": "set_user_password",
       "parameters": {
         "username": "archuser",
+        "password": "CHANGE_ME",
         "confirm": false
       }
     }

@@ -53,11 +53,13 @@ Do not use `--execute` against an unreviewed disk configuration.
 | `--execute` | Override JSON and execute operations. Requires root for system changes. |
 | `--version` | Print the application version. |
 | `--help` | Show command usage and available flags. |
+| `--help-installer` | Show installer-specific help text. |
 
 Examples:
 
 ```bash
 python3 main.py --help
+python3 main.py --help-installer
 python3 main.py --version
 python3 main.py --config profiles/test.json --dry-run
 ```
