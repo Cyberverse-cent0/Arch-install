@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from config import ConfigError, load_config
-from src.disk.btrfs_disk_setup import get_all_disks, DiskInfo
+from src.disk.btrfs_disk_setup import get_all_disks, DiskInfo, get_disk_info
 from src.profile.system_profile import collect_profile
 from src.boot.encryption_layout import EncryptionLayout, get_hooks_for_layout
 
@@ -32,6 +32,9 @@ def select_target_disk() -> str:
             continue
         if disk.mountpoint:  # Skip mounted disks
             continue
+        # Skip loop devices and optical drives
+        if disk.type in ["loop", "rom"]:
+            continue
         try:
             size_bytes = int(disk.size)
             # Minimum 10GB, prefer larger disks
@@ -41,6 +44,10 @@ def select_target_disk() -> str:
             continue
     
     if not target_disks:
+        # If no disks meet criteria, try to find any unmounted disk
+        for disk in disks:
+            if disk.type == "disk" and not disk.mountpoint and disk.type not in ["loop", "rom"]:
+                return f"/dev/{disk.name}" if not disk.name.startswith("/dev/") else disk.name
         return "/dev/sda"  # Fallback
     
     # Sort by size (largest first) and return the path
@@ -118,13 +125,14 @@ def generate_config_from_template(
     template_path: str = "app.json.template",
     output: str = "app.generated.json",
     password: str = "CHANGE_ME",
-    username: str = "archuser"
+    username: str = "archuser",
+    override_disk: str = None
 ) -> Path:
     """Generate configuration from template with hardware detection."""
     
     # Detect hardware
     boot_mode = detect_boot_mode()
-    target_disk = select_target_disk()
+    target_disk = override_disk if override_disk else select_target_disk()
     memory_bytes = detect_memory_size()
     memory_gb = memory_bytes // (1024 * 1024 * 1024)
     desktop_env = detect_desktop_environment()
@@ -171,6 +179,7 @@ def generate_config_from_template(
     print(f"  Desktop: {desktop_env}")
     print(f"  Base packages: {', '.join(base_packages)}")
     print(f"  Username: {username}")
+    print(f"  Total operations: {len(config.get('operations', []))}")
     
     return output_path
 
@@ -193,16 +202,28 @@ def main() -> int:
     parser.add_argument("--template-path", default="app.json.template", help="Template file path")
     parser.add_argument("--password", default="CHANGE_ME", help="LUKS and user password")
     parser.add_argument("--username", default="archuser", help="Default username")
+    parser.add_argument("--disk", help="Override target disk selection")
     args = parser.parse_args()
     
     try:
         if args.template:
-            output_path = generate_config_from_template(
-                args.template_path,
-                args.output,
-                args.password,
-                args.username
-            )
+            # Override disk selection if specified
+            if args.disk:
+                print(f"Using specified disk: {args.disk}")
+                output_path = generate_config_from_template(
+                    args.template_path,
+                    args.output,
+                    args.password,
+                    args.username,
+                    args.disk
+                )
+            else:
+                output_path = generate_config_from_template(
+                    args.template_path,
+                    args.output,
+                    args.password,
+                    args.username
+                )
         else:
             output_path = generate_config(args.source, args.output)
     except (ConfigError, OSError) as error:

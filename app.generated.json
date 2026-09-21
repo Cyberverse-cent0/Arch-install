@@ -46,8 +46,8 @@
     {
       "function": "crypt_setup",
       "parameters": {
-        "disk": "/dev/nvme0n1",
-        "password": "MySecurePassword123",
+        "disk": "/dev/vda",
+        "password": "CHANGE_ME",
         "name": "cryptroot",
         "crypt_type": "luks2",
         "confirm": false,
@@ -94,8 +94,53 @@
         "boot_mode": "uefi",
         "efi_directory": "/mnt/boot",
         "bootloader_id": "GRUB",
+        "crypt_device": "/dev/vda",
+        "crypt_mapper": "cryptroot",
+        "configure_encrypted_boot": true,
         "confirm": false,
         "timeout": 300
+      }
+    },
+    {
+      "function": "write_crypttab",
+      "parameters": {
+        "target_root": "/mnt",
+        "entries": [
+          {
+            "target": "cryptroot",
+            "source": "/dev/vda",
+            "key_file": "none",
+            "options": "luks"
+          }
+        ],
+        "confirm": false
+      }
+    },
+    {
+      "function": "configure_mkinitcpio_hooks",
+      "parameters": {
+        "target_root": "/mnt",
+        "hooks": [
+          "base",
+          "udev",
+          "autodetect",
+          "keyboard",
+          "keymap",
+          "consolefont",
+          "block",
+          "encrypt",
+          "lvm2",
+          "filesystems",
+          "fsck"
+        ],
+        "confirm": false
+      }
+    },
+    {
+      "function": "regenerate_initramfs",
+      "parameters": {
+        "target_root": "/mnt",
+        "confirm": false
       }
     },
     {
@@ -107,8 +152,8 @@
     {
       "function": "create_user",
       "parameters": {
-        "username": "codecrafter",
-        "password": "MySecurePassword123",
+        "username": "archuser",
+        "password": "CHANGE_ME",
         "shell": "/bin/bash",
         "groups": [
           "wheel",
@@ -123,7 +168,7 @@
     {
       "function": "setup_sudo_access",
       "parameters": {
-        "username": "codecrafter",
+        "username": "archuser",
         "confirm": false
       }
     }
