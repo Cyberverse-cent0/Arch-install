@@ -31,6 +31,14 @@ from src.pkgs.aur_setup import (
 )
 from src.boot.grub_setup import install_grub
 from src.profile.system_profile import collect_profile, save_profile
+from src.user.user_setup import (
+    add_user_to_group,
+    create_group,
+    create_user,
+    set_user_password,
+    setup_default_groups,
+    setup_sudo_access,
+)
 
 
 VERSION = "1.0.2"
@@ -57,6 +65,12 @@ FUNCTIONS: dict[str, Callable[..., Any]] = {
     "install_grub": install_grub,
     "collect_profile": collect_profile,
     "save_profile": save_profile,
+    "create_user": create_user,
+    "set_user_password": set_user_password,
+    "create_group": create_group,
+    "add_user_to_group": add_user_to_group,
+    "setup_default_groups": setup_default_groups,
+    "setup_sudo_access": setup_sudo_access,
 }
 
 
@@ -85,6 +99,12 @@ DESTRUCTIVE_FUNCTIONS = {
     "install_aur_packages",
     "install_grub",
     "save_profile",
+    "create_user",
+    "set_user_password",
+    "create_group",
+    "add_user_to_group",
+    "setup_default_groups",
+    "setup_sudo_access",
 }
 
 

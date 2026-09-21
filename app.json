@@ -40,7 +40,7 @@
     {
       "function": "crypt_setup",
       "parameters": {
-        "disk": "/dev/sda",
+        "disk": "/dev/nvme0n1",
         "password": "CHANGE_ME",
         "name": "cryptroot",
         "crypt_type": "luks2",
@@ -90,6 +90,29 @@
         "bootloader_id": "GRUB",
         "confirm": false,
         "timeout": 300
+      }
+    },
+    {
+      "function": "setup_default_groups",
+      "parameters": {
+        "confirm": false
+      }
+    },
+    {
+      "function": "create_user",
+      "parameters": {
+        "username": "archuser",
+        "password": "CHANGE_ME",
+        "shell": "/bin/bash",
+        "groups": ["wheel", "audio", "video", "storage", "network"],
+        "confirm": false
+      }
+    },
+    {
+      "function": "setup_sudo_access",
+      "parameters": {
+        "username": "archuser",
+        "confirm": false
       }
     }
   ]

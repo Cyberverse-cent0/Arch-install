@@ -91,6 +91,29 @@
         "confirm": false,
         "timeout": 300
       }
+    },
+    {
+      "function": "setup_default_groups",
+      "parameters": {
+        "confirm": false
+      }
+    },
+    {
+      "function": "create_user",
+      "parameters": {
+        "username": "{{USERNAME}}",
+        "password": "{{USER_PASSWORD}}",
+        "shell": "/bin/bash",
+        "groups": ["wheel", "audio", "video", "storage", "network"],
+        "confirm": false
+      }
+    },
+    {
+      "function": "setup_sudo_access",
+      "parameters": {
+        "username": "{{USERNAME}}",
+        "confirm": false
+      }
     }
   ]
 }

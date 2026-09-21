@@ -47,7 +47,7 @@
       "function": "crypt_setup",
       "parameters": {
         "disk": "/dev/nvme0n1",
-        "password": "CHANGE_ME",
+        "password": "MySecurePassword123",
         "name": "cryptroot",
         "crypt_type": "luks2",
         "confirm": false,
@@ -96,6 +96,35 @@
         "bootloader_id": "GRUB",
         "confirm": false,
         "timeout": 300
+      }
+    },
+    {
+      "function": "setup_default_groups",
+      "parameters": {
+        "confirm": false
+      }
+    },
+    {
+      "function": "create_user",
+      "parameters": {
+        "username": "codecrafter",
+        "password": "MySecurePassword123",
+        "shell": "/bin/bash",
+        "groups": [
+          "wheel",
+          "audio",
+          "video",
+          "storage",
+          "network"
+        ],
+        "confirm": false
+      }
+    },
+    {
+      "function": "setup_sudo_access",
+      "parameters": {
+        "username": "codecrafter",
+        "confirm": false
       }
     }
   ]

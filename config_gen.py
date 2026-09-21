@@ -105,7 +105,8 @@ def get_boot_config(boot_mode: str, target_disk: str) -> dict[str, str]:
 def generate_config_from_template(
     template_path: str = "app.json.template",
     output: str = "app.generated.json",
-    password: str = "CHANGE_ME"
+    password: str = "CHANGE_ME",
+    username: str = "archuser"
 ) -> Path:
     """Generate configuration from template with hardware detection."""
     
@@ -130,7 +131,9 @@ def generate_config_from_template(
         "{{TARGET_DISK}}": target_disk,
         "{{DESKTOP_ENV}}": desktop_env,
         "{{LUKS_PASSWORD}}": password,
-        "{{BASE_PACKAGES}}": json.dumps(base_packages)
+        "{{BASE_PACKAGES}}": json.dumps(base_packages),
+        "{{USERNAME}}": username,
+        "{{USER_PASSWORD}}": password
     }
     
     for placeholder, value in replacements.items():
@@ -151,6 +154,7 @@ def generate_config_from_template(
     print(f"  Memory: {memory_gb}GB")
     print(f"  Desktop: {desktop_env}")
     print(f"  Base packages: {', '.join(base_packages)}")
+    print(f"  Username: {username}")
     
     return output_path
 
@@ -171,7 +175,8 @@ def main() -> int:
     parser.add_argument("--output", default="app.generated.json", help="Output config file")
     parser.add_argument("--template", action="store_true", help="Use template with hardware detection")
     parser.add_argument("--template-path", default="app.json.template", help="Template file path")
-    parser.add_argument("--password", default="CHANGE_ME", help="LUKS encryption password")
+    parser.add_argument("--password", default="CHANGE_ME", help="LUKS and user password")
+    parser.add_argument("--username", default="archuser", help="Default username")
     args = parser.parse_args()
     
     try:
@@ -179,7 +184,8 @@ def main() -> int:
             output_path = generate_config_from_template(
                 args.template_path,
                 args.output,
-                args.password
+                args.password,
+                args.username
             )
         else:
             output_path = generate_config(args.source, args.output)
