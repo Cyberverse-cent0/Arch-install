@@ -223,6 +223,22 @@ def execute_operation(
     return function(**parameters)
 
 
+def find_unconfirmed_operations(
+    operations: list[dict[str, Any]],
+) -> list[tuple[int, str]]:
+    """Return destructive operations that are not explicitly confirmed."""
+    blocked = []
+    for index, operation in enumerate(operations):
+        function_name = operation.get("function")
+        parameters = operation.get("parameters", {})
+        if (
+            function_name in DESTRUCTIVE_FUNCTIONS
+            and parameters.get("confirm") is not True
+        ):
+            blocked.append((index + 1, function_name))
+    return blocked
+
+
 def run_config(
     config: dict[str, Any],
     cli_dry_run: bool | None = None,
@@ -259,6 +275,25 @@ def run_config(
             "run_config",
         )
         return False
+
+    if not dry_run:
+        unconfirmed = find_unconfirmed_operations(operations)
+        if unconfirmed:
+            details = ", ".join(
+                f"#{index} {function_name}"
+                for index, function_name in unconfirmed
+            )
+            pr_error(
+                "Execution blocked: destructive operations require "
+                f"confirm=true: {details}",
+                "run_config",
+            )
+            pr_error(
+                "Review devices and secrets, then set confirm=true only "
+                "for the intended operations.",
+                "run_config",
+            )
+            return False
 
     for index, operation in enumerate(operations):
         function_name = operation.get("function")

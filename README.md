@@ -42,6 +42,11 @@ Real execution requires deliberate confirmation in both places:
 sudo python3 main.py --execute
 ```
 
+Before running any operation, the executor checks every destructive operation.
+If any operation still has `"confirm": false`, execution is blocked and all
+blocked operation numbers are listed. This prevents a real run from partially
+executing and stopping at the first unconfirmed operation.
+
 Do not use `--execute` against an unreviewed disk configuration.
 
 ## Command-Line Flags
