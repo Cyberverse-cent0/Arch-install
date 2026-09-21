@@ -24,21 +24,29 @@ def _print(tag: str, message: str, color: str) -> None:
 
 
 def pr_info(message: str, func_name: str) -> None:
+    if not message:
+        return
     log.log(message, func_name, "info")
     _print("[INFO]", message, COLORS["green"])
 
 
 def pr_warn(message: str, func_name: str) -> None:
+    if not message:
+        return
     log.log(message, func_name, "warning")
     _print("[WARN]", message, COLORS["yellow"])
 
 
 def pr_error(message: str, func_name: str) -> None:
+    if not message:
+        return
     log.log(message, func_name, "error")
     _print("[ERROR]", message, COLORS["red"])
 
 
 def pr_debug(message: str, func_name: str) -> None:
+    if not message:
+        return
     if os.getenv("DEBUG", "0") != "1":
         return
     log.log(message, func_name, "debug")
@@ -46,5 +54,7 @@ def pr_debug(message: str, func_name: str) -> None:
 
 
 def pr_dry(message: str, func_name: str) -> None:
+    if not message:
+        return
     log.log(message, func_name, "info")
     _print("[DRY]", message, COLORS["cyan"])

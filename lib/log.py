@@ -3,7 +3,12 @@ import os
 import sys
 from logging.handlers import RotatingFileHandler
 
-LOG_DIR = "/var/log/arch_installer_jhiuqdiua"
+# Try to use system log directory, fall back to user home
+if os.access("/var/log", os.W_OK):
+    LOG_DIR = "/var/log/arch_installer_jhiuqdiua"
+else:
+    LOG_DIR = os.path.expanduser("~/.local/log/arch_installer_jhiuqdiua")
+
 LOG_FILE = "installer_log.log"
 LOG_PATH = os.path.join(LOG_DIR, LOG_FILE)
 
@@ -53,6 +58,7 @@ def setup_logger(name: str = "installer") -> logging.Logger:
         logger.addHandler(file_handler)
     except OSError as e:
         logger.warning("Could not open log file %s: %s", LOG_PATH, e)
+        logger.info("Logging to console only")
 
     return logger
 
@@ -61,4 +67,4 @@ def log(message: str, func_name: str, log_level: str) -> None:
     logger = setup_logger()
     level = getattr(logging, log_level.upper(), logging.INFO)
     logger.log(level, f"{func_name}: {message}")
-    
+

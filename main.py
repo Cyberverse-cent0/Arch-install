@@ -324,15 +324,29 @@ def main() -> int:
         help="Override configuration and execute operations",
     )
 
-    parser.set_defaults(dry_run=None)
+    parser.set_defaults(dry_run=None, version=False, help_installer=False)
 
     parser.add_argument(
         "--version",
-        action="version",
-        version=f"%(prog)s {VERSION}",
+        action="store_true",
+        help="Show version information",
+    )
+
+    parser.add_argument(
+        "--help-installer",
+        action="store_true",
+        help="Show installer help information",
     )
 
     args = parser.parse_args()
+
+    if args.version:
+        version()
+        return 0
+
+    if args.help_installer:
+        help()
+        return 0
 
     try:
         config = load_config(args.config)
